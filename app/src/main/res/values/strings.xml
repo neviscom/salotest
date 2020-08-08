@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AviaTest</string>
+
+    <string name="city_of_origin">Город отправления</string>
+    <string name="city_of_destination">Город назначения</string>
+    <string name="search">Поиск</string>
+</resources>
