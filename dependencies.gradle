@@ -28,6 +28,9 @@ ext.versions = [
 
         //Utils
         timber    : '4.7.1',
+
+        //play services
+        maps       : "17.0.0"
 ]
 
 ext.libraries = [
@@ -57,4 +60,7 @@ ext.libraries = [
 
         //Utils
         timber                  : "com.jakewharton.timber:timber:$versions.timber",
+
+        //play services
+        maps                    : "com.google.android.gms:play-services-maps:$versions.maps",
 ]

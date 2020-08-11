@@ -3,6 +3,7 @@ package com.aviatest.search
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.aviatest.search.city.CityFragment
+import com.aviatest.search.map.MapsFragment
 import com.aviatest.search.trip.TripFragment
 
 class SearchActivity : AppCompatActivity(),
@@ -30,7 +31,9 @@ class SearchActivity : AppCompatActivity(),
     override fun onDestinationClick() {
         supportFragmentManager
             .beginTransaction()
-            .replace(android.R.id.content, CityFragment())
+            .replace(android.R.id.content,
+                MapsFragment()
+            )
             .addToBackStack(CityFragment::class.java.canonicalName)
             .commit()
     }
