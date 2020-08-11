@@ -30,7 +30,9 @@ ext.versions = [
         timber    : '4.7.1',
 
         //play services
-        maps       : "17.0.0"
+        maps      : "17.0.0",
+
+        hilt      : "2.28-alpha",
 ]
 
 ext.libraries = [
@@ -63,4 +65,10 @@ ext.libraries = [
 
         //play services
         maps                    : "com.google.android.gms:play-services-maps:$versions.maps",
+]
+
+ext.projectModules = [
+        domain      : project(':domain'),
+        data        : project(':data'),
+        presentation: project(':app'),
 ]

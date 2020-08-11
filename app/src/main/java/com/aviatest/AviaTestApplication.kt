@@ -2,8 +2,10 @@ package com.aviatest
 
 import android.app.Application
 import android.os.StrictMode
+import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
 
+@HiltAndroidApp
 class AviaTestApplication : Application() {
 
     override fun onCreate() {

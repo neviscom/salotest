@@ -1,11 +1,13 @@
-package com.aviatest.search
+package com.aviatest.presentation.search
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.aviatest.search.city.CityFragment
-import com.aviatest.search.map.MapsFragment
-import com.aviatest.search.trip.TripFragment
+import com.aviatest.presentation.search.city.CityFragment
+import com.aviatest.presentation.search.map.MapsFragment
+import com.aviatest.presentation.search.trip.TripFragment
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class SearchActivity : AppCompatActivity(),
     TripFragment.Callback {
 

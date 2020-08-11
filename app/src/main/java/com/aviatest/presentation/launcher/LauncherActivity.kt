@@ -1,10 +1,9 @@
-package com.aviatest.launcher
+package com.aviatest.presentation.launcher
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.aviatest.R
-import com.aviatest.search.SearchActivity
+import androidx.appcompat.app.AppCompatActivity
+import com.aviatest.presentation.search.SearchActivity
 
 class LauncherActivity : AppCompatActivity() {
 

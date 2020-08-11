@@ -1,4 +1,4 @@
-package com.aviatest.search.map
+package com.aviatest.presentation.search.map
 
 import android.animation.ValueAnimator
 import android.graphics.*

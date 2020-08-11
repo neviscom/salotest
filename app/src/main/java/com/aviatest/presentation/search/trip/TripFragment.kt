@@ -1,4 +1,4 @@
-package com.aviatest.search.trip
+package com.aviatest.presentation.search.trip
 
 import android.os.Bundle
 import android.view.View
