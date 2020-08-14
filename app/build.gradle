@@ -46,11 +46,9 @@ dependencies {
     implementation libraries.kotlin
     implementation libraries.ktx
     implementation libraries.rxJava
-    //implementation libraries.dagger
     implementation libraries.timber
-    implementation "com.google.dagger:hilt-android:$versions.hilt"
-    kapt "com.google.dagger:hilt-android-compiler:$versions.hilt"
-    kapt 'androidx.hilt:hilt-compiler:1.0.0-alpha02'
+    implementation libraries.hilt
+    kapt libraries.hiltCompiler
 
     // CoreUI
     //rx
@@ -61,7 +59,8 @@ dependencies {
     implementation libraries.material
     implementation libraries.fragmentKtx
     implementation libraries.lifecycleExtensions
-    implementation 'androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha02'
+    implementation libraries.hiltxViewModel
+    kapt libraries.hiltxCompiler
 
     //maps
     implementation libraries.maps
