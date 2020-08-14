@@ -11,13 +11,13 @@ data class CityEntity(
     @SerializedName("country")
     val country: String,
     @SerializedName("latinFullName")
-    val latinFullName: String,
+    val latinFullName: String?,
     @SerializedName("fullname")
     val fullName: String,
     @SerializedName("clar")
-    val clar: String,
+    val clar: String?,
     @SerializedName("latinClar")
-    val latinClar: String,
+    val latinClar: String?,
     @SerializedName("location")
     val location: LocationEntity,
     @SerializedName("hotelsCount")
@@ -27,19 +27,19 @@ data class CityEntity(
     @SerializedName("city")
     val city: String,
     @SerializedName("latinCity")
-    val latinCity: String,
+    val latinCity: String?,
     @SerializedName("timezone")
-    val timezone: String,
+    val timezone: String?,
     @SerializedName("timezonesec")
-    val timezonesec: String,
+    val timezonesec: String?,
     @SerializedName("latinCountry")
-    val latinCountry: String,
+    val latinCountry: String?,
     @SerializedName("countryId")
     val countryId: String,
     @SerializedName("_score")
-    val score: Long,
+    val score: Long?,
     @SerializedName("isOutOfService")
-    val isOutOfService: Boolean,
+    val isOutOfService: Boolean?,
     @SerializedName("state")
     val state: String?
 )
