@@ -2,7 +2,7 @@ package com.aviatest.data.search
 
 import com.google.gson.annotations.SerializedName
 
-data class Cities(
+data class CitiesEntity(
     @SerializedName("cities")
-    val cities: List<City>
+    val cities: List<CityEntity>
 )

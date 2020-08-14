@@ -8,6 +8,7 @@ import android.view.View
 import android.view.animation.LinearInterpolator
 import androidx.annotation.FloatRange
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
@@ -33,6 +34,11 @@ class MapsFragment : Fragment(R.layout.fragment_maps) {
     lateinit var bitmapUtils: BitmapUtils
 
     companion object {
+        fun newInstance(trip: Trip): Fragment =
+            MapsFragment().apply { arguments = bundleOf(TRIP_KEY to trip) }
+
+        private const val TRIP_KEY = "trip"
+
         private const val PROGRESS_STEP = 0.01f
         private const val PLANE_ANIMATION_DURATION = 15_000L
         private const val PLANE_ANIMATION_START_DELAY = 1_000L
