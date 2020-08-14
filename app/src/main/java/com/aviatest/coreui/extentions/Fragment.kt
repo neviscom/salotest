@@ -9,3 +9,7 @@ inline fun <reified T> Fragment.getCallback(): T? =
         targetFragment as? T
                 ?: parentFragment as? T
                 ?: requireActivity() as? T
+
+fun Fragment.hideSoftKeyboard() {
+        activity?.hideSoftKeyboard()
+}

@@ -2,7 +2,6 @@ package com.aviatest.presentation.search
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.aviatest.presentation.search.city.CityFragment
 import com.aviatest.presentation.search.map.MapsFragment
 import com.aviatest.presentation.search.trip.TripFragment
 import dagger.hilt.android.AndroidEntryPoint
@@ -22,21 +21,11 @@ class SearchActivity : AppCompatActivity(),
         }
     }
 
-    override fun onOriginClick() {
+    override fun onTripSelected(trip: Trip) {
         supportFragmentManager
             .beginTransaction()
-            .replace(android.R.id.content, CityFragment())
-            .addToBackStack(CityFragment::class.java.canonicalName)
-            .commit()
-    }
-
-    override fun onDestinationClick() {
-        supportFragmentManager
-            .beginTransaction()
-            .replace(android.R.id.content,
-                MapsFragment()
-            )
-            .addToBackStack(CityFragment::class.java.canonicalName)
+            .replace(android.R.id.content, MapsFragment.newInstance(trip))
+            .addToBackStack(MapsFragment::class.java.canonicalName)
             .commit()
     }
 }

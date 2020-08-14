@@ -1,118 +1,141 @@
 package com.aviatest.presentation.search.map
 
 import android.animation.ValueAnimator
-import android.graphics.*
+import android.graphics.Bitmap
+import android.graphics.PointF
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.view.animation.PathInterpolator
+import android.view.animation.LinearInterpolator
 import androidx.annotation.FloatRange
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Observer
 import com.aviatest.R
+import com.aviatest.coreui.extentions.dp
+import com.aviatest.coreui.utils.BitmapUtils
+import com.aviatest.presentation.search.Trip
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import kotlin.math.absoluteValue
 import kotlin.math.atan2
 import kotlin.math.max
 
-class MapsFragment : Fragment() {
+@AndroidEntryPoint
+class MapsFragment : Fragment(R.layout.fragment_maps) {
+
+    @Inject
+    lateinit var bitmapUtils: BitmapUtils
 
     companion object {
         private const val PROGRESS_STEP = 0.01f
-        private const val PLANE_ANIMATION_DURATION = 30_000L
+        private const val PLANE_ANIMATION_DURATION = 15_000L
         private const val PLANE_ANIMATION_START_DELAY = 1_000L
     }
 
-    private val pathInterpolator = PathInterpolator(
-        0f, 0.5f,
-        1f, 0.5f
-    )
-
     private val planeAnimator = ValueAnimator.ofFloat(0.0f, 1.0f)
-        .apply { duration =
-            PLANE_ANIMATION_DURATION
-        }
+        .apply { interpolator = LinearInterpolator() }
+        .apply { duration = PLANE_ANIMATION_DURATION }
+        .apply { startDelay = PLANE_ANIMATION_START_DELAY }
+
+    private val viewModel: MapViewModel by viewModels()
+
+    private lateinit var pathEvaluator: PathEvaluator
+    private lateinit var planeMarker: Marker
+
+    private var googleMap: GoogleMap? = null
+
+    private var animatorUpdateListener: ValueAnimator.AnimatorUpdateListener? = null
 
     private val callback = OnMapReadyCallback { googleMap ->
-        /**
-         * Manipulates the map once available.
-         * This callback is triggered when the map is ready to be used.
-         * This is where we can add markers or lines, add listeners or move the camera.
-         * In this case, we just add a marker near Sydney, Australia.
-         * If Google Play services is not installed on the device, the user will be prompted to
-         * install it inside the SupportMapFragment. This method will only be triggered once the
-         * user has installed Google Play services and returned to the app.
-         */
-        val spb = LatLng(59.966449, 30.309805)
-        val ams = LatLng(52.384030, 4.845314)
-        val bounds = LatLngBounds(ams, spb)
-        googleMap.setLatLngBoundsForCameraTarget(bounds)
-
-        addPlanePath(googleMap, spb, ams)
-        val marker = addPlaneMarker(googleMap, spb, ams)
-        addCityMarker(googleMap, spb, "LED")
-        addCityMarker(googleMap, ams, "AMS")
-
-        planeAnimator.addUpdateListener {
-            val value = it.animatedValue as Float
-            marker.position = getPosition(value, spb, ams)
-            marker.rotation = getAngle(value, spb, ams) - 90f
-        }
-        planeAnimator.startDelay =
-            PLANE_ANIMATION_START_DELAY
-        planeAnimator.start()
-
+        this.googleMap = googleMap
+        viewModel.tripLiveData.value?.let { initMap(googleMap, it) }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_maps, container, false)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (savedInstanceState == null) {
+            viewModel.onFirstStart(arguments!!.getParcelable(TRIP_KEY)!!)
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
         mapFragment?.getMapAsync(callback)
+
+        viewModel.tripLiveData.observe(viewLifecycleOwner,
+            Observer { trip -> googleMap?.let { initMap(it, trip) } })
     }
 
+    override fun onPause() {
+        planeAnimator.pause()
+        super.onPause()
+    }
 
-    private fun addCityMarker(googleMap: GoogleMap, position: LatLng, cityTitle: String) {
+    override fun onResume() {
+        super.onResume()
+        if (planeAnimator.isStarted) planeAnimator.resume()
+    }
+
+    private fun initMap(googleMap: GoogleMap, trip: MapTrip) {
+        val points = getNormalizedPoints(trip.from.location, trip.to.location)
+        pathEvaluator = CubicBezier(
+            points.first, points.second,
+            0f, 0.5f,
+            1f, 0.5f
+        )
+
+        addPlanePath(googleMap)
+        planeMarker = addPlaneMarker(googleMap, trip)
+        addCityMarker(googleMap, trip.from)
+        addCityMarker(googleMap, trip.to)
+
+        googleMap.moveCamera(
+            CameraUpdateFactory.newLatLngBounds(
+                getLatLngBounds(trip.from.location, trip.to.location),
+                32.dp.toInt()
+            )
+        )
+
+        animatorUpdateListener?.let(planeAnimator::removeUpdateListener)
+        animatorUpdateListener = ValueAnimator.AnimatorUpdateListener {
+            val value = it.animatedValue as Float
+            planeMarker.position = getPosition(value)
+            planeMarker.rotation = getAngle(value) - 90f
+        }
+        planeAnimator.addUpdateListener(animatorUpdateListener)
+        planeAnimator.start()
+    }
+
+    private fun addCityMarker(googleMap: GoogleMap, mapPoint: MapPoint): Marker =
         googleMap.addMarker(
             MarkerOptions()
-                .position(position)
-                .icon(BitmapDescriptorFactory.fromBitmap(createCityMarker(cityTitle)))
+                .position(mapPoint.location)
+                .icon(BitmapDescriptorFactory.fromBitmap(createCityMarker(mapPoint.name)))
         )
-    }
 
-    private fun addPlaneMarker(
-        googleMap: GoogleMap,
-        startPosition: LatLng,
-        finalPosition: LatLng
-    ): Marker = googleMap.addMarker(
-        MarkerOptions()
-            .position(startPosition)
-            .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_plane))
-            .anchor(0.5f, 0.5f)
-            .rotation(getAngle(0f, startPosition, finalPosition) - 90f)
-    )
+    private fun addPlaneMarker(googleMap: GoogleMap, trip: MapTrip): Marker =
+        googleMap.addMarker(
+            MarkerOptions()
+                .position(trip.from.location)
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_plane))
+                .anchor(0.5f, 0.5f)
+                .rotation(getAngle(0f) - 90f)
+        )
 
-    private fun addPlanePath(
-        googleMap: GoogleMap,
-        startPosition: LatLng,
-        finalPosition: LatLng
-    ) {
+    private fun addPlanePath(googleMap: GoogleMap): Polyline {
         val points = generateSequence(0.0f, { it + PROGRESS_STEP })
-            .map { getPosition(it, startPosition, finalPosition) }
+            .map { getPosition(it) }
             .take(101)
             .toList()
 
-        googleMap.addPolyline(
+        return googleMap.addPolyline(
             PolylineOptions()
                 .addAll(points)
                 .geodesic(true)
@@ -120,34 +143,20 @@ class MapsFragment : Fragment() {
         )
     }
 
+    private fun getPosition(@FloatRange(from = 0.0, to = 1.0) progress: Float): LatLng =
+        pathEvaluator.evaluate(progress).let { LatLng(it.x.toDouble(), it.y.toDouble()) }
 
-    private fun getPosition(
-        @FloatRange(from = 0.0, to = 1.0) progress: Float,
-        startPosition: LatLng,
-        finalPosition: LatLng
-    ): LatLng =
-        LatLng(
-            startPosition.latitude + (finalPosition.latitude - startPosition.latitude) * progress,
-            startPosition.longitude + (finalPosition.longitude - startPosition.longitude) * pathInterpolator.getInterpolation(
-                progress
-            )
-        )
-
-    private fun getAngle(
-        @FloatRange(from = 0.0, to = 1.0) progress: Float,
-        from: LatLng,
-        to: LatLng
-    ): Float {
-        val current = getPosition(progress, from, to)
-        val next = getPosition(max(progress + PROGRESS_STEP, 0f), from, to)
+    private fun getAngle(@FloatRange(from = 0.0, to = 1.0) progress: Float): Float {
+        val current = getPosition(progress)
+        val next = getPosition(max(progress + PROGRESS_STEP, 0f))
         return getAngle(current, next)
     }
 
-    private fun getAngle(start: LatLng, target: LatLng): Float {
+    private fun getAngle(start: LatLng, final: LatLng): Float {
         var angle = Math.toDegrees(
             atan2(
-                target.longitude - start.longitude,
-                target.latitude - start.latitude
+                final.longitude - start.longitude,
+                final.latitude - start.latitude
             )
         ).toFloat()
         if (angle < 0) {
@@ -156,39 +165,26 @@ class MapsFragment : Fragment() {
         return angle
     }
 
-    private fun createCityMarker(text: String): Bitmap? {
+    private fun createCityMarker(text: String): Bitmap? =
+        ContextCompat.getDrawable(requireContext(), R.drawable.ic_city_marker)
+            ?.let { bitmapUtils.drawTextOnCenterOfDrawable(it, text) }
 
-        val drawable = ContextCompat.getDrawable(requireContext(),
-            R.drawable.ic_city_marker
-        )
-            ?: return null
-        var bitmap = Bitmap.createBitmap(
-            drawable.intrinsicWidth,
-            drawable.intrinsicHeight,
-            Bitmap.Config.ARGB_8888
-        ) ?: return null
+    private fun getLatLngBounds(first: LatLng, second: LatLng) =
+        LatLngBounds.builder()
+            .include(first)
+            .include(second)
+            .build()
 
-        var bitmapConfig = bitmap.config;
-        if (bitmapConfig == null) {
-            bitmapConfig = Bitmap.Config.ARGB_8888
+    private fun getNormalizedPoints(from: LatLng, to: LatLng): Pair<PointF, PointF> {
+        var fromPointF = PointF(from.latitude.toFloat(), from.longitude.toFloat())
+        var toPointF = PointF(to.latitude.toFloat(), to.longitude.toFloat())
+        if ((to.longitude - from.longitude).absoluteValue > 180) {
+            if (from.longitude < to.longitude) {
+                fromPointF = PointF(from.latitude.toFloat(), from.longitude.toFloat() + 360f)
+            } else {
+                toPointF = PointF(to.latitude.toFloat(), to.longitude.toFloat() + 360f)
+            }
         }
-
-        bitmap = bitmap.copy(bitmapConfig, true)
-
-        val canvas = Canvas(bitmap)
-        drawable.setBounds(0, 0, canvas.width, canvas.height)
-        drawable.draw(canvas)
-
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-        paint.textSize = 16 * resources.displayMetrics.density
-        paint.color = Color.WHITE
-
-        val bounds = Rect()
-        paint.getTextBounds(text, 0, text.length, bounds)
-        val x = (bitmap.width - bounds.width()) / 2f
-        val y = (bitmap.height + bounds.height()) / 2f
-        canvas.drawText(text, x, y, paint)
-
-        return bitmap
+        return fromPointF to toPointF
     }
 }

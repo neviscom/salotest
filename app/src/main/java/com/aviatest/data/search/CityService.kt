@@ -10,5 +10,5 @@ interface CityService {
     fun getCities(
         @Query("term") query: String,
         @Query("lang") lang: String = "ru"
-    ): Single<Cities>
+    ): Single<CitiesEntity>
 }

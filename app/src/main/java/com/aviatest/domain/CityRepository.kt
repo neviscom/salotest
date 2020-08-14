@@ -4,5 +4,5 @@ import io.reactivex.Single
 
 interface CityRepository {
 
-    fun getCities(query: String): Single<List<Any>>
+    fun getCities(query: String): Single<List<City>>
 }

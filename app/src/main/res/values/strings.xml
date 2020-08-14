@@ -5,4 +5,8 @@
     <string name="city_of_origin">Город отправления</string>
     <string name="city_of_destination">Город назначения</string>
     <string name="search">Поиск</string>
+    <string name="fill_all_fields_error">Выберете город отправления и назначения</string>
+    <string name="something_went_wrong">Something went wrong. Try again</string>
+    <string name="info_icon_description">Info icon</string>
+    <string name="nothing_found">Ничего не найдено</string>
 </resources>
