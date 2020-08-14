@@ -15,7 +15,8 @@ class SearchCityUseCase @Inject constructor(
             .observeOn(Schedulers.computation())
             .flatMapObservable { Observable.fromIterable(it) }
             .concatMapSingle { city ->
-                Single.just(city.iataCodes.map { createAirport(it, city) })
+                val codes = takeAllExceptFirstIfAny(city.iataCodes)
+                Single.just(codes.map { createAirport(it, city) })
             }
             .toList()
             .map(::foldAirports)
@@ -34,4 +35,7 @@ class SearchCityUseCase @Inject constructor(
             ArrayList(),
             { acc, airports -> acc.apply { addAll(airports) } }
         )
+
+    private fun <T> takeAllExceptFirstIfAny(list: List<T>): List<T> =
+        if (list.size == 2) list.drop(1) else list
 }
