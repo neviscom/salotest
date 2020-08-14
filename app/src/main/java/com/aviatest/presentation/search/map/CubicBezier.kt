@@ -26,7 +26,9 @@ class CubicBezier(
         val scale = sqrt(dx.pow(2) + dy.pow(2)) / sqrt(2f)
         val matrix: Matrix = Matrix()
             .apply { setScale(scale, scale) }
-            .apply { postRotate(atan(dy / dx).radianToDegree() - 45f) }
+            .apply {
+                val correctionalAngle = if (dx < 0f) 180f else 0f
+                postRotate(atan(dy / dx).radianToDegree() - 45f + correctionalAngle) }
             .apply { postTranslate(p0.x, p0.y) }
 
         val p13 = floatArrayOf(controlX1, controlY1)
