@@ -31,10 +31,14 @@ class CitiesViewModel @ViewModelInject constructor(
 
     init {
         disposable = queriesSubject
-            .switchMapSingle { query ->
+            .switchMapMaybe { query ->
                 useCase.findCityAirports(query)
+                    .toMaybe()
                     .doOnSubscribe { _progress.postValue(true) }
                     .doOnEvent { _, _ -> _progress.postValue(false) }
+                    .retry(3)
+                    .doOnError(::handleError)
+                    .onErrorComplete()
             }
             .doOnNext(_airports::postValue)
             .subscribe(Functions.emptyConsumer(), Consumer(::handleError))
