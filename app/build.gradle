@@ -64,6 +64,7 @@ dependencies {
 
     //maps
     implementation libraries.maps
+    implementation libraries.mapUtils
 
     //network
     implementation libraries.okHttp

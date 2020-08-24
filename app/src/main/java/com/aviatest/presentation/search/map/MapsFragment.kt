@@ -21,11 +21,10 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.maps.android.SphericalUtil
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlin.math.absoluteValue
-import kotlin.math.atan2
-import kotlin.math.max
 
 @AndroidEntryPoint
 class MapsFragment : Fragment(R.layout.fragment_maps) {
@@ -93,8 +92,8 @@ class MapsFragment : Fragment(R.layout.fragment_maps) {
         val points = getNormalizedPoints(trip.from.location, trip.to.location)
         pathEvaluator = CubicBezier(
             points.first, points.second,
-            0f, 0.5f,
-            1f, 0.5f
+            0.2f, 0.8f,
+            0.8f, 0.2f
         )
 
         addPlanePath(googleMap)
@@ -154,21 +153,8 @@ class MapsFragment : Fragment(R.layout.fragment_maps) {
 
     private fun getAngle(@FloatRange(from = 0.0, to = 1.0) progress: Float): Float {
         val current = getPosition(progress)
-        val next = getPosition(max(progress + PROGRESS_STEP, 0f))
-        return getAngle(current, next)
-    }
-
-    private fun getAngle(start: LatLng, final: LatLng): Float {
-        var angle = Math.toDegrees(
-            atan2(
-                final.longitude - start.longitude,
-                final.latitude - start.latitude
-            )
-        ).toFloat()
-        if (angle < 0) {
-            angle += 360f
-        }
-        return angle
+        val next = getPosition(progress + PROGRESS_STEP)
+        return SphericalUtil.computeHeading(current, next).toFloat()
     }
 
     private fun createCityMarker(text: String): Bitmap? =

@@ -9,16 +9,18 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 class CubicBezier(
-    private val p0: PointF,
-    private val p3: PointF,
+    start: PointF,
+    final: PointF,
     controlX1: Float,
     controlY1: Float,
     controlX2: Float,
     controlY2: Float
 ) : PathEvaluator {
 
+    private val p0: PointF = start
     private val p1: PointF
     private val p2: PointF
+    private val p3: PointF = final
 
     init {
         val dx = p3.x - p0.x

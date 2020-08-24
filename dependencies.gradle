@@ -60,6 +60,7 @@ ext.libraries = [
 
         //Utils
         timber                  : "com.jakewharton.timber:timber:$versions.timber",
+        mapUtils                : "com.google.maps.android:android-maps-utils:2.0.3",
 
         //play services
         maps                    : "com.google.android.gms:play-services-maps:$versions.maps",
