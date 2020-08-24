@@ -11,6 +11,7 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Consumer
 import io.reactivex.internal.functions.Functions
 import io.reactivex.subjects.BehaviorSubject
+import java.util.concurrent.TimeUnit
 
 class CitiesViewModel @ViewModelInject constructor(
     private val useCase: SearchCityUseCase
@@ -18,7 +19,7 @@ class CitiesViewModel @ViewModelInject constructor(
 
     private val queriesSubject: BehaviorSubject<String> = BehaviorSubject.createDefault("")
 
-    private val _airports = MutableLiveData<List<Airport>>()
+    private val _airports = MutableLiveData<List<Airport>>(emptyList())
     val airports: LiveData<List<Airport>> get() = _airports
 
     private val _showLoadingError = SingleLiveEvent<Any?>()
@@ -31,6 +32,7 @@ class CitiesViewModel @ViewModelInject constructor(
 
     init {
         disposable = queriesSubject
+            .debounce(300, TimeUnit.MILLISECONDS)
             .switchMapMaybe { query ->
                 useCase.findCityAirports(query)
                     .toMaybe()
