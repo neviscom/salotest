@@ -32,7 +32,7 @@ class CitiesViewModel @ViewModelInject constructor(
 
     init {
         disposable = queriesSubject
-            .debounce(300, TimeUnit.MILLISECONDS)
+            .debounce(DEBOUNCE_TIMEOUT, TimeUnit.MILLISECONDS)
             .switchMapMaybe { query ->
                 useCase.findCityAirports(query)
                     .toMaybe()
@@ -58,4 +58,8 @@ class CitiesViewModel @ViewModelInject constructor(
     }
 
     private fun handleError(throwable: Throwable) = _showLoadingError.postCall()
+
+    companion object {
+        const val DEBOUNCE_TIMEOUT = 300L
+    }
 }
